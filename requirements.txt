@@ -1,0 +1,14 @@
+# CUDA 13.0 build (подходит для RTX 40xx и драйвера из WSL2)
+# Для машины без GPU замените index-url на https://download.pytorch.org/whl/cpu
+# и поставьте torch==2.15.0+cpu / torchvision==0.29.2+cpu.
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.14.1+cu130
+torchvision==0.29.1+cu130
+
+ultralytics==8.4.200
+jupyter
+ipykernel
+pandas
+matplotlib
+pyyaml
+opencv-python

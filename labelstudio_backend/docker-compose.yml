@@ -1,0 +1,53 @@
+services:
+  label-studio:
+    image: heartexlabs/label-studio:1.23.2
+    container_name: label-studio
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED: "true"
+      LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT: "/label-studio/files"
+      LABEL_STUDIO_ML_BLOCK_LOCAL_IP: "false"
+      LABEL_STUDIO_SSRF_PROTECTION_ENABLED: "false"
+      LABEL_STUDIO_COLLECT_ANALYTICS: "false"
+    volumes:
+      - ls-data:/label-studio/data
+      - ../datasets:/label-studio/files/datasets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  yolo-backend:
+    build:
+      context: .
+      args:
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-requirements-cpu.txt}
+    image: passport-anpr-yolo-backend:latest
+    container_name: yolo-backend
+    restart: unless-stopped
+    depends_on:
+      - label-studio
+    ports:
+      - "9090:9090"
+    env_file:
+      - .env
+    environment:
+      LABEL_STUDIO_URL: "http://label-studio:8080"
+      YOLO_MODEL_PATH: ""
+      WORKERS: "1"
+      THREADS: "4"
+      PYTHONPATH: "/app"
+    volumes:
+      - ./models:/app/models
+      - ../runs:/app/runs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:9090/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  ls-data:

@@ -1,0 +1,9 @@
+services:
+  yolo-backend:
+    build:
+      context: .
+      args:
+        REQUIREMENTS_FILE: requirements.txt
+    environment:
+      YOLO_DEVICE: "0"
+    gpus: all

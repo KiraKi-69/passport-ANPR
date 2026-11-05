@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# сгенерированные данные и артефакты обучения
+datasets/
+idd.v1i.coco/
+runs/
+*.pt
+*.onnx
+
+# обученные веса backend храним в репозитории
+!labelstudio_backend/models/*.pt
+!labelstudio_backend/models/*.onnx
+
+# Label Studio ML backend
+labelstudio_backend/data/
+.env
+
+cache.db
+labelstudio_backend/cache.db
+.venv-labelstudio/
+*.log

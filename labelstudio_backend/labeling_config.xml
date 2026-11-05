@@ -1,0 +1,30 @@
+<View>
+  <Image name="image" value="$image"/>
+  <RectangleLabels name="label" toName="image" model_score_threshold="0.25" opacity="0.1">
+    <Label value="type" background="#FF6B6B"/>
+    <Label value="code" background="#FFA94D"/>
+    <Label value="number" background="#FFD43B"/>
+    <Label value="surname" background="#A9E34B"/>
+    <Label value="surname_eng" background="#69DB7C"/>
+    <Label value="name" background="#38D9A9"/>
+    <Label value="name_eng" background="#3BC9DB"/>
+    <Label value="nationality" background="#4DABF7"/>
+    <Label value="nationality-nationality_eng" background="#748FFC"/>
+    <Label value="gender" background="#9775FA"/>
+    <Label value="birth_date" background="#DA77F2"/>
+    <Label value="birth_place" background="#F783AC"/>
+    <Label value="birth_place_eng" background="#FF8787"/>
+    <Label value="birth_country" background="#FFC078"/>
+    <Label value="issue_date" background="#FFE066"/>
+    <Label value="expiry_date" background="#C0EB75"/>
+    <Label value="authority" background="#8CE99A"/>
+    <Label value="authority_eng" background="#63E6BE"/>
+    <Label value="authority_line0" background="#66D9E8"/>
+    <Label value="authority_line1" background="#74C0FC"/>
+    <Label value="height" background="#91A7FF"/>
+    <Label value="mrz_line0" background="#B197FC"/>
+    <Label value="mrz_line1" background="#E599F7"/>
+    <Label value="photo" background="#FAA2C1"/>
+    <Label value="face" background="#FFA8A8"/>
+  </RectangleLabels>
+</View>
