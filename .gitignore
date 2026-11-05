@@ -7,10 +7,14 @@ __pycache__/
 datasets/
 idd.v1i.coco/
 runs/
+
+# базовые pretrained-веса YOLO не коммитим
+/yolov8n.pt
+/notebooks/yolov8n.pt
+
+# обученные модели нужны для запуска backend, поэтому коммитим их
 *.pt
 *.onnx
-
-# обученные веса backend храним в репозитории
 !labelstudio_backend/models/*.pt
 !labelstudio_backend/models/*.onnx
 

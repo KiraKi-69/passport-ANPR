@@ -19,9 +19,10 @@ scripts/start_label_studio.sh запуск Label Studio
 ## 1. Что уже готово
 
 - Обученные веса:
-  `runs/detect/idd_passport_fields_yolov8n/weights/best.pt`.
-  Копия для backend лежит в репозитории:
-  `labelstudio_backend/models/best.pt` (там же `last.pt` и `best.onnx`).
+  `runs/detect/idd_passport_fields_yolov8n/weights/best.pt` (локально,
+  каталог `runs/` не коммитится).
+  Копии для backend включены в репозиторий:
+  `labelstudio_backend/models/best.pt`, `last.pt`, `best.onnx`.
 - ML-backend в `labelstudio_backend/`, поддерживает 25 классов из
   `datasets/idd_passport/data.yaml`.
 - Конфиг разметки: `labelstudio_backend/labeling_config.xml` (классы совпадают
