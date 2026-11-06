@@ -12,3 +12,4 @@ pandas
 matplotlib
 pyyaml
 opencv-python
+requests
