@@ -18,14 +18,17 @@ from __future__ import annotations
 
 import logging
 import os
+import tempfile
 import threading
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import requests
 import torch
 from label_studio_ml.model import LabelStudioMLBase
 from label_studio_ml.response import ModelResponse
 from ultralytics import YOLO
+import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -234,3 +237,89 @@ class YOLOBackend(LabelStudioMLBase):
             "to load the new best.pt"
         )
         return False
+    
+    def _ls_get(self, full_url: str):
+        """GET с автоподбором схемы авторизации (Bearer → Token)."""
+        # 1) сначала Bearer (PAT/access)
+        access = None
+        try:
+            access = self._ls_access_token()
+        except Exception as exc:
+            logger.warning("refresh failed: %s", exc)
+
+        if access:
+            r = requests.get(
+                full_url,
+                headers={"Authorization": f"Bearer {access}"},
+                timeout=60,
+                stream=True,
+            )
+            if r.status_code != 401:
+                return r
+            logger.info("Bearer → 401, retrying with Token")
+
+        # 2) fallback — legacy token (тот же PAT, но схема Token)
+        pat = os.getenv("LABEL_STUDIO_API_KEY") or ""
+        r = requests.get(
+            full_url,
+            headers={"Authorization": f"Token {pat}"},
+            timeout=60,
+            stream=True,
+        )
+        return r
+    def _ls_base_url(self) -> str:
+        """Возвращает LABEL_STUDIO_URL с префиксом, без хвостового слэша."""
+        return (os.getenv("LABEL_STUDIO_URL") or "").rstrip("/")
+
+    def _ls_access_token(self) -> str:
+        """Получить access из PAT через refresh."""
+        r = requests.post(
+            f"{self._ls_base_url()}/api/token/refresh/",
+            json={"refresh": os.getenv("LABEL_STUDIO_API_KEY") or ""},
+            timeout=10,
+        )
+        r.raise_for_status()
+        return r.json()["access"]
+
+    def get_local_path(self, url: str, *args, **kwargs) -> str:
+        # 1. Если это уже локальный файл
+        if os.path.exists(url):
+            return url
+
+        # 2. Если пришел старый формат upload (картинка из БД)
+        if "/data/upload/" in url:
+            # Берем только имя файла (например, b23aa4d0-64be35af68a47-960x650.jpeg)
+            filename = url.split("/data/upload/")[-1].split("/")[-1]
+            # В старом формате файлы обычно лежат в /ls-media/upload/
+            full_path = os.path.join("/ls-media/upload", filename)
+            
+            if os.path.exists(full_path):
+                return full_path
+            # Если не нашли, можно попробовать поискать просто в корне /ls-media
+            full_path = os.path.join("/ls-media", filename)
+            if os.path.exists(full_path):
+                return full_path
+            raise FileNotFoundError(f"File not found on PVC: {full_path}")
+
+        # 3. Если пришел новый формат local-files (с доменом или без)
+        elif "/data/local-files/" in url:
+            # Извлекаем часть после ?d=
+            if "?d=" not in url:
+                raise ValueError(f"Malformed local-files URL: {url}")
+            
+            rel_path = urllib.parse.unquote(url.split("?d=")[1])
+            
+            # В логах видно: d=label-studio/data/media/2f1278ccb80f0f059452de03c7737fc4.jpg
+            # Отчекрыживаем префикс label-studio/data/media/ (если он есть)
+            # или просто берем имя файла
+            filename = os.path.basename(rel_path)
+            
+            full_path = os.path.join("/ls-media", filename)
+            
+            if os.path.exists(full_path):
+                return full_path
+            else:
+                raise FileNotFoundError(f"File not found on PVC: {full_path}")
+
+        # 4. На всякий случай, если пришел вообще непонятный формат
+        raise ValueError(f"Unsupported URL format: {url}")

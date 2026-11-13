@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo-backend
+  namespace: app-demoproj
+  labels:
+    app: yolo-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yolo-backend
+  template:
+    metadata:
+      labels:
+        app: yolo-backend
+    spec:
+      volumes:
+      - name: ls-media
+        persistentVolumeClaim:
+          claimName: ls-media-pvc
+      - name: models
+        persistentVolumeClaim:
+          claimName: yolo-models-pvc
+      - name: runs
+        persistentVolumeClaim:
+          claimName: yolo-runs-pvc
+          readOnly: true
+      containers:
+      - name: yolo-backend
+        image: harbor.neoflex.ru/test-images/labels-backend-ocr:v11
+        ports:
+        - name: http
+          containerPort: 9090
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: yolo-backend-config
+        env:
+        - name: YOLO_MODEL_PATH
+        - name: WORKERS
+          value: "1"
+        - name: THREADS
+          value: "4"
+        - name: PYTHONPATH
+          value: /app
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+        volumeMounts:
+        - name: ls-media
+          mountPath: /ls-media
+        - name: models
+          mountPath: /app/models
+        - name: runs
+          readOnly: true
+          mountPath: /app/runs
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          failureThreshold: 10
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

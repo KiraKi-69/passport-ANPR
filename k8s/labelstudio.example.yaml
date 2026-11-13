@@ -1,0 +1,15 @@
+
+spec:
+  template:
+    spec:
+      volumes:
+      - name: ls-media
+        persistentVolumeClaim:
+          claimName: ls-media-pvc
+      containers:
+        env:
+        - name: LOCAL_FILES_SERVING_ENABLED
+          value: "true"
+        volumeMounts:
+        - name: ls-media
+          mountPath: /label-studio/data/media
