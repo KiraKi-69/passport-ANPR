@@ -157,7 +157,7 @@ docker compose -f docker-compose.yml -f docker-compose.gpu.yml exec yolo-backend
 5. Сохраните модель и включите **Start labeling using predictions**.
 6. Загрузите изображения. Откройте задачу — появятся предсказания.
 
-Проверить backend из контейнера Label Studio:
+Проверить backend из контейнера Label Studio: 
 
 ```bash
 docker compose exec label-studio python -c \

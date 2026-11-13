@@ -1,0 +1,22 @@
+
+spec:
+  template:
+    spec:
+      containers:
+        volumeMounts:
+        - mountPath: /lmnt/label-studio
+          name: ls-media
+        - mountPath: /mnt/yolo-models
+          name: yolo-models
+        - mountPath: /mnt/yolo-runs
+          name: yolo-runs
+      volumes:
+      - name: ls-media
+        persistentVolumeClaim:
+          claimName: ls-media-pvc
+      - name: yolo-models
+        persistentVolumeClaim:
+          claimName: yolo-models-pvc
+      - name: yolo-runs
+        persistentVolumeClaim:
+          claimName: yolo-runs-pvc
