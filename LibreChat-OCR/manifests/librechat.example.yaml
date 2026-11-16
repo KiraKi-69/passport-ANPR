@@ -1,0 +1,16 @@
+# Ваша существующая секция endpoints
+endpoints:
+  agents:
+    recursionLimit: 100
+    maxRecursionLimit: 200
+    capabilities:
+      - "context"
+      - "ocr"
+
+# Новая секция, которую нужно добавить
+ocr:
+  strategy: "mistral_ocr"
+  baseURL: "http://mistral-ocr-mock.ocr-service.svc:8000/v1"
+  apiKey: "dummy-key"
+  allowedAddresses:
+    - "mistral-ocr-mock.ocr-service.svc:8000"

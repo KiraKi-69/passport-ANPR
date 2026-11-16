@@ -1,0 +1,9 @@
+    spec:
+      containers:
+        - name: librechat
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: uploads
+          emptyDir: {}

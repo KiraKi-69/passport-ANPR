@@ -1,0 +1,103 @@
+# 1. Namespace (по желанию)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ocr-service
+---
+# 2. PersistentVolumeClaim (для сохранения базы данных и временных файлов)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: deepseek-ocr-data
+  namespace: ocr-service
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi # Вы можете увеличить объем в зависимости от потребностей
+---
+# 3. Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deepseek-ocr-api
+  namespace: ocr-service
+  labels:
+    app: deepseek-ocr-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deepseek-ocr-api
+  template:
+    metadata:
+      labels:
+        app: deepseek-ocr-api
+    spec:
+      # Если ваши GPU-узлы имеют taint, раскомментируйте следующее
+      # tolerations:
+      # - key: "nvidia.com/gpu"
+      #   operator: "Exists"
+      #   effect: "NoSchedule"
+      containers:
+        - name: ocr-api
+          image: edgaras0x4e/deepseek-ocr-2-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 7860
+              name: http
+          env:
+            # По желанию: если вы хотите включить аутентификацию по API Key
+            # - name: API_KEY
+            #   value: "your-secret-key"
+            - name: DB_PATH
+              value: "/data/ocr.db"
+            - name: UPLOAD_DIR
+              value: "/data/uploads"
+          resources:
+            requests:
+              # Этот образ требует GPU, запросите 1 карту
+              nvidia.com/gpu: "1"
+              memory: "8Gi"
+              cpu: "2"
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "12Gi"
+              cpu: "4"
+          volumeMounts:
+            - name: ocr-data
+              mountPath: /data
+          # Проверка работоспособности: образ предоставляет эндпоинт /health
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7860
+            initialDelaySeconds: 30 # Даем время на загрузку модели (6.4GB)
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7860
+            initialDelaySeconds: 120 # Загрузка модели может быть медленной, увеличьте время ожидания
+            periodSeconds: 30
+      volumes:
+        - name: ocr-data
+          persistentVolumeClaim:
+            claimName: deepseek-ocr-data
+---
+# 4. Service (ClusterIP, для внутреннего доступа)
+apiVersion: v1
+kind: Service
+metadata:
+  name: deepseek-ocr-api
+  namespace: ocr-service
+spec:
+  type: ClusterIP
+  selector:
+    app: deepseek-ocr-api
+  ports:
+    - port: 7860
+      targetPort: 7860
+      protocol: TCP
+      name: http
